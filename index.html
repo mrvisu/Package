@@ -65,6 +65,10 @@
         .tab-inactive-tableaus { @apply bg-gradient-to-br from-pink-100 to-fuchsia-100 border-pink-300 text-pink-700 shadow-sm hover:shadow-md; }
         .tab-active-gifts { @apply bg-gradient-to-br from-emerald-400/90 to-teal-500/90 backdrop-blur-md text-white border-white/50 z-20 shadow-lg shadow-teal-500/40; }
         .tab-inactive-gifts { @apply bg-gradient-to-br from-teal-100 to-emerald-100 border-teal-300 text-teal-700 shadow-sm hover:shadow-md; }
+        
+        /* نجوم التقييم */
+        .star-rating input:checked ~ label i { fill: #f59e0b; color: #f59e0b; }
+        .star-rating label:hover ~ label i, .star-rating label:hover i { fill: #fbbf24; color: #fbbf24; }
     </style>
 </head>
 <body class="min-h-screen selection:bg-rose-400 selection:text-white pb-20 bg-[#fdfbf7] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-50 via-orange-50 to-amber-50 text-stone-800 transition-colors duration-500">
@@ -77,7 +81,7 @@
                 <p class="text-xs text-stone-500 mt-1 uppercase tracking-widest font-bold">Photography Studio</p>
             </div>
             
-            <button id="toggleEditBtn" onclick="toggleEditMode()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all bg-white/80 text-stone-600 border border-stone-200 hover:text-rose-600 hover:bg-white shadow-sm">
+            <button id="toggleEditBtn" onclick="toggleEditMode()" class="hidden items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all bg-white/80 text-stone-600 border border-stone-200 hover:text-rose-600 hover:bg-white shadow-sm">
                 <i data-lucide="settings" class="w-4 h-4"></i>
                 <span id="editBtnText">تعديل المينيو</span>
             </button>
@@ -115,6 +119,89 @@
         </div>
 
         <div id="itemsContainer" class="animate-in fade-in slide-in-from-bottom-8 duration-700"></div>
+
+        <!-- قسم الإحصائيات (للمدير فقط) -->
+        <div id="adminStatsSection" class="hidden max-w-4xl mx-auto mt-12 mb-6 bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] border-[3px] border-rose-200 shadow-xl">
+            <h3 class="text-xl font-bold text-stone-900 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-5 h-5 text-rose-500"></i> إحصائيات المينيو (للمدير)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-stone-50 p-4 rounded-2xl text-center border border-stone-100">
+                    <p class="text-2xl font-black text-rose-500" id="stat-views">0</p>
+                    <p class="text-xs text-stone-500 font-bold mt-1">الزيارات</p>
+                </div>
+                <div class="bg-stone-50 p-4 rounded-2xl text-center border border-stone-100">
+                    <p class="text-2xl font-black text-emerald-500" id="stat-clicks">0</p>
+                    <p class="text-xs text-stone-500 font-bold mt-1">النقرات على الحجز</p>
+                </div>
+                <div class="bg-stone-50 p-4 rounded-2xl text-center border border-stone-100">
+                    <p class="text-2xl font-black text-blue-500" id="stat-inquiries">0</p>
+                    <p class="text-xs text-stone-500 font-bold mt-1">الاستفسارات</p>
+                </div>
+                <div class="bg-stone-50 p-4 rounded-2xl text-center border border-stone-100">
+                    <p class="text-2xl font-black text-amber-500" id="stat-reviews">0</p>
+                    <p class="text-xs text-stone-500 font-bold mt-1">التقييمات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- صندوق الاستفسارات والتقييمات -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
+            
+            <!-- صندوق الاستفسارات -->
+            <div class="bg-white/60 backdrop-blur-lg p-6 md:p-8 rounded-[2rem] border-[3px] border-stone-200 shadow-xl">
+                <h3 class="text-2xl font-black text-stone-900 mb-2 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-blue-500"></i> عندك استفسار؟
+                </h3>
+                <p class="text-sm text-stone-500 mb-6 font-medium">أرسل لنا استفسارك وسنرد عليك فوراً عبر الواتساب.</p>
+                <form onsubmit="submitInquiry(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-stone-700 text-xs font-bold mb-1.5">الاسم</label>
+                        <input required name="inqName" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all placeholder:text-stone-400" placeholder="اكتب اسمك هنا" />
+                    </div>
+                    <div>
+                        <label class="block text-stone-700 text-xs font-bold mb-1.5">الاستفسار</label>
+                        <textarea required name="inqMessage" rows="3" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all placeholder:text-stone-400" placeholder="بخصوص أي باقة أو خدمة تود الاستفسار؟"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/30 transform hover:-translate-y-1">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i> إرسال الاستفسار
+                    </button>
+                </form>
+            </div>
+
+            <!-- صندوق التقييمات -->
+            <div class="bg-white/60 backdrop-blur-lg p-6 md:p-8 rounded-[2rem] border-[3px] border-amber-200 shadow-xl flex flex-col">
+                <h3 class="text-2xl font-black text-stone-900 mb-2 flex items-center gap-2">
+                    <i data-lucide="star" class="w-6 h-6 text-amber-500 fill-amber-500"></i> آراء عملائنا
+                </h3>
+                <p class="text-sm text-stone-500 mb-6 font-medium">رأيك يهمنا ويساعدنا على تقديم الأفضل.</p>
+                
+                <div id="reviewsContainer" class="flex-1 space-y-4 mb-6 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
+                    <!-- Reviews will be rendered here -->
+                </div>
+
+                <form onsubmit="submitReview(event)" class="mt-auto border-t border-stone-200 pt-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold text-stone-600">تقييمك:</span>
+                        <div class="flex flex-row-reverse justify-end gap-1 star-rating">
+                            <input type="radio" id="star5" name="rating" value="5" class="hidden" checked/>
+                            <label for="star5" class="cursor-pointer text-stone-300 transition-colors"><i data-lucide="star" class="w-5 h-5"></i></label>
+                            <input type="radio" id="star4" name="rating" value="4" class="hidden"/>
+                            <label for="star4" class="cursor-pointer text-stone-300 transition-colors"><i data-lucide="star" class="w-5 h-5"></i></label>
+                            <input type="radio" id="star3" name="rating" value="3" class="hidden"/>
+                            <label for="star3" class="cursor-pointer text-stone-300 transition-colors"><i data-lucide="star" class="w-5 h-5"></i></label>
+                            <input type="radio" id="star2" name="rating" value="2" class="hidden"/>
+                            <label for="star2" class="cursor-pointer text-stone-300 transition-colors"><i data-lucide="star" class="w-5 h-5"></i></label>
+                            <input type="radio" id="star1" name="rating" value="1" class="hidden"/>
+                            <label for="star1" class="cursor-pointer text-stone-300 transition-colors"><i data-lucide="star" class="w-5 h-5"></i></label>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input required name="revName" class="w-1/3 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-400" placeholder="الاسم" />
+                        <input required name="revComment" class="w-2/3 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-400" placeholder="أضف تقييمك..." />
+                    </div>
+                    <button type="submit" class="w-full mt-3 py-2 rounded-xl text-xs font-bold transition-all bg-stone-900 text-white hover:bg-stone-800 shadow-md">إضافة التقييم</button>
+                </form>
+            </div>
+        </div>
     </main>
 
     <!-- Booking Details Modal -->
@@ -229,6 +316,16 @@
         const edICls = "w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400";
         const edLCls = "block text-stone-700 font-bold text-sm mb-2";
 
+        // نظام الحماية وإدارة البيانات (In-Memory)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminLogged = urlParams.get('admin') === 'true';
+        
+        let statsData = { views: 124, clicks: 45, inquiries: 12, reviews: 0 };
+        let reviewsData = [
+            { id: 1, name: "محمود حسن", rating: 5, comment: "شغل عالي جداً وتسليم في الموعد، شكراً استوديو مركبي ❤️" },
+            { id: 2, name: "سارة و أحمد", rating: 5, comment: "الصور طلعت تحفة والفيديو السينمائي كأنه فيلم بجد، تسلم إيديكم." }
+        ];
+
         let menuData = {
             promo: {
                 id: 'promo', isActive: true,
@@ -269,8 +366,32 @@
             gifts: { cardBg: 'bg-gradient-to-br from-teal-100/95 to-emerald-50/95', borderNorm: 'border-teal-300 shadow-xl shadow-teal-500/10 hover:border-teal-500', borderPop: 'border-teal-500 shadow-[0_15px_50px_rgba(20,184,166,0.3)]', text: 'text-teal-500', badge: 'bg-gradient-to-r from-emerald-400 to-teal-500', btn: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400' }
         };
 
-        function initApp() { renderPromo(); renderItems(); updateIcons(); }
+        function initApp() { 
+            // تسجيل زيارة جديدة
+            statsData.views++; 
+            statsData.reviews = reviewsData.length;
+
+            if (isAdminLogged) {
+                document.getElementById('toggleEditBtn').classList.remove('hidden');
+                document.getElementById('toggleEditBtn').classList.add('flex');
+                document.getElementById('adminStatsSection').classList.remove('hidden');
+                updateStatsUI();
+            }
+
+            renderPromo(); 
+            renderItems(); 
+            renderReviews();
+            updateIcons(); 
+        }
         function updateIcons() { lucide.createIcons(); }
+
+        function updateStatsUI() {
+            if(!isAdminLogged) return;
+            document.getElementById('stat-views').innerText = statsData.views;
+            document.getElementById('stat-clicks').innerText = statsData.clicks;
+            document.getElementById('stat-inquiries').innerText = statsData.inquiries;
+            document.getElementById('stat-reviews').innerText = statsData.reviews;
+        }
 
         const getEditBtns = (id) => isEditMode ? `<div class="absolute top-2 right-2 z-20 flex gap-2"><button onclick="openEditModal(${id})" class="p-2 bg-white/90 backdrop-blur text-blue-600 rounded-full hover:bg-blue-600 hover:text-white shadow-sm transition-all"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteItem(${id})" class="p-2 bg-white/90 backdrop-blur text-red-600 rounded-full hover:bg-red-600 hover:text-white shadow-sm transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>` : '';
 
@@ -350,6 +471,9 @@
 
         // Modal Logic
         function openBookingModal(id) {
+            statsData.clicks++;
+            updateStatsUI();
+
             const item = menuData[activeTab].find(i => i.id === id);
             const th = categoryThemes[activeTab];
             
@@ -459,6 +583,58 @@
                 renderItems();
             }
             closeEditModal();
+        }
+
+        // --- الاستفسارات والتقييمات ---
+        function submitInquiry(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            statsData.inquiries++;
+            updateStatsUI();
+            
+            const msg = `مرحباً استوديو مركبي،\n\n*استفسار من:* ${fd.get('inqName')}\n*الرسالة:* ${fd.get('inqMessage')}`;
+            window.open(`https://wa.me/201201260040?text=${encodeURIComponent(msg)}`, '_blank');
+            e.target.reset();
+        }
+
+        function renderReviews() {
+            const container = document.getElementById('reviewsContainer');
+            if(reviewsData.length === 0) {
+                container.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">لا توجد تقييمات بعد. كن أول من يقيّم!</p>';
+                return;
+            }
+            container.innerHTML = reviewsData.map(rev => `
+                <div class="bg-stone-50 border border-stone-100 p-4 rounded-2xl animate-in fade-in">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-stone-900 text-sm flex items-center gap-2">
+                            <div class="w-6 h-6 bg-stone-200 rounded-full flex items-center justify-center text-xs text-stone-600"><i data-lucide="user" class="w-3 h-3"></i></div>
+                            ${rev.name}
+                        </h4>
+                        <div class="flex gap-0.5">
+                            ${Array(5).fill().map((_, i) => `<i data-lucide="star" class="w-3 h-3 ${i < rev.rating ? 'fill-amber-500 text-amber-500' : 'text-stone-300'}"></i>`).join('')}
+                        </div>
+                    </div>
+                    <p class="text-xs text-stone-600 font-medium pr-8">${rev.comment}</p>
+                </div>
+            `).join('');
+            updateIcons();
+        }
+
+        function submitReview(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const rating = parseInt(fd.get('rating') || '5');
+            const newRev = {
+                id: Date.now(),
+                name: fd.get('revName'),
+                rating: rating,
+                comment: fd.get('revComment')
+            };
+            reviewsData.unshift(newRev); // إضافة لأعلى القائمة
+            statsData.reviews = reviewsData.length;
+            updateStatsUI();
+            renderReviews();
+            e.target.reset();
         }
 
         document.addEventListener('DOMContentLoaded', initApp);
