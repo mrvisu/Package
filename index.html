@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Video, Image as ImageIcon, Gift, Star, CheckCircle2, Phone, MapPin, Instagram, MessageCircle, Settings, Pencil, Trash2, Plus, X, User, CalendarDays, Sparkles, Building2, Map, Smartphone, Wallet, CreditCard, Copy, Flame, Megaphone, ArrowLeft, Upload, ImagePlus, Info, Focus, Aperture, ShoppingBag } from 'lucide-react';
 
 // بيانات الافتراضية
@@ -11,7 +11,11 @@ const initialData = {
     desc: "تغطية كاملة (فوتوغرافيا + فيديو سينمائي 4K + ألبوم ديجيتال + تابلوه خشب كبير) بخصم جبار لفترة محدودة جداً!",
     price: "12,000",
     oldPrice: "18,500",
-    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200&auto=format&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1606800052052-a08af7148866?q=80&w=1200&auto=format&fit=crop"
+    ],
     link: "https://wa.me/201201260040?text=مرحباً، أريد الاستفسار عن عرض الموسم الشامل"
   },
   photography: [
@@ -105,6 +109,7 @@ const initialData = {
   tableaus: [
     { id: 6, name: "تابلوه خشب كلاسيك", desc: "50x70 سم - خشب مستورد", price: "600", images: ["https://images.unsplash.com/photo-1544457070-4cd773b4d71e?q=80&w=800&auto=format&fit=crop"] },
     { id: 7, name: "تابلوه كانفاس فاخر", desc: "60x90 سم - طباعة عالية الجودة", price: "950", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
+    { id: 15, name: "تابلوه عرض 3 قطع", desc: "تصميم عصري مقسم لثلاث لوحات", price: "1,200", images: ["https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop"] },
   ],
   photoOnly: [
     { id: 10, name: "سيشن تصوير خارجي", price: "2,500", desc: "تصوير لمدة ساعتين في مكان مفتوح مع تسليم 50 صورة معدلة.", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=200&auto=format&fit=crop"] },
@@ -116,6 +121,7 @@ const initialData = {
   gifts: [
     { id: 8, name: "كتاب الزوار (Guestbook)", desc: "بتصميم خشبي محفور باسم العرسان", price: "400", images: ["https://images.unsplash.com/photo-1517457210165-27a3c333a5da?q=80&w=800&auto=format&fit=crop"] },
     { id: 9, name: "تصوير فوري (Polaroid)", desc: "50 صورة توزع للضيوف أثناء الفرح", price: "1,500", images: ["https://images.unsplash.com/photo-1526304760382-3591d3840148?q=80&w=800&auto=format&fit=crop"] },
+    { id: 16, name: "بوكس صور خشبي", desc: "صندوق أنيق يحتوي على 30 صورة مطبوعة", price: "750", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
   ]
 };
 
@@ -133,12 +139,24 @@ export default function App() {
   const [selectedPackageForBooking, setSelectedPackageForBooking] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [formImages, setFormImages] = useState([]);
-  const [promoImage, setPromoImage] = useState('');
   const [tempImageUrl, setTempImageUrl] = useState('');
   
+  // Promo Slideshow State
+  const [currentPromoIdx, setCurrentPromoIdx] = useState(0);
+
   // Addons State
   const [selectedAddons, setSelectedAddons] = useState([]);
   
+  // Effect لتشغيل التلاشي التلقائي لصور العرض
+  useEffect(() => {
+    if (menuData.promo?.isActive && menuData.promo.images?.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentPromoIdx((prev) => (prev + 1) % menuData.promo.images.length);
+      }, 3500); // تغيير الصورة كل 3.5 ثواني
+      return () => clearInterval(interval);
+    }
+  }, [menuData.promo]);
+
   // Helper functions
   const parsePrice = (priceStr) => parseInt(String(priceStr).replace(/,/g, '')) || 0;
   const formatPrice = (priceNum) => priceNum.toLocaleString();
@@ -269,7 +287,7 @@ ${addonsText}${totalText}
   const openModalForEdit = (item) => {
     setEditingItem(item);
     if (item.id === 'promo') {
-      setPromoImage(item.image || '');
+      setFormImages(item.images || []);
     } else if (item.id !== 'notes') {
       setFormImages(item.images || []);
     }
@@ -279,7 +297,6 @@ ${addonsText}${totalText}
   const openModalForAdd = () => {
     setEditingItem(null);
     setFormImages([]);
-    setPromoImage('');
     setIsEditModalOpen(true);
   };
 
@@ -302,7 +319,7 @@ ${addonsText}${totalText}
         price: formData.get('price'),
         oldPrice: formData.get('oldPrice'),
         link: formData.get('link'),
-        image: promoImage,
+        images: formImages,
       };
       setMenuData(prev => ({ ...prev, promo: newPromo }));
       setIsEditModalOpen(false);
@@ -409,9 +426,16 @@ ${addonsText}${totalText}
             )}
             
             <div className="flex flex-col md:flex-row">
-              <div className="md:w-5/12 h-64 md:h-auto relative overflow-hidden order-2 md:order-1">
-                <img src={menuData.promo.image} alt="عرض خاص" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-l from-rose-900/80 via-transparent to-transparent"></div>
+              <div className="md:w-5/12 h-64 md:h-auto relative overflow-hidden order-2 md:order-1 bg-stone-900">
+                {menuData.promo.images?.map((img, idx) => (
+                  <img 
+                    key={idx} 
+                    src={img} 
+                    alt={`عرض خاص ${idx + 1}`} 
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out group-hover:scale-105 ${idx === currentPromoIdx ? 'opacity-100' : 'opacity-0'}`} 
+                  />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-l from-rose-900/80 via-transparent to-transparent z-10 pointer-events-none"></div>
               </div>
               
               <div className="md:w-7/12 p-8 md:p-12 flex flex-col justify-center relative order-1 md:order-2">
@@ -589,7 +613,7 @@ ${addonsText}${totalText}
           )}
 
           {(activeTab === 'tableaus' || activeTab === 'gifts') && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
               {menuData[activeTab].map((item) => (
                 <div key={item.id} className="relative bg-white/60 backdrop-blur-lg border border-white shadow-xl rounded-[2rem] overflow-hidden hover:border-rose-200 hover:-translate-y-1 transition-all group flex flex-col">
                   {isEditMode && (
@@ -599,7 +623,7 @@ ${addonsText}${totalText}
                     </div>
                   )}
 
-                  <div className="h-48 w-full overflow-hidden bg-stone-100 relative">
+                  <div className="h-72 w-full overflow-hidden bg-stone-100 relative">
                     {item.images && item.images[0] ? (
                       <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
@@ -609,12 +633,12 @@ ${addonsText}${totalText}
                   </div>
                   
                   <div className="p-5 flex flex-col flex-1">
-                    <h3 className="text-lg font-bold text-stone-900 mb-1">{item.name}</h3>
+                    <h3 className="text-xl font-bold text-stone-900 mb-1">{item.name}</h3>
                     <p className="text-stone-500 text-sm mb-4 flex-1">{item.desc}</p>
                     
                     <div className="flex justify-between items-center mt-auto pt-4 border-t border-stone-100">
                       <div className="flex items-end gap-1">
-                        <span className="text-xl font-black text-rose-500">{item.price}</span>
+                        <span className="text-2xl font-black text-rose-500">{item.price}</span>
                         <span className="text-stone-400 text-xs mb-0.5 font-bold">ج.م</span>
                       </div>
                       <button onClick={() => handleSimpleWhatsApp(item.name)} className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white p-2.5 rounded-xl shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5" title="طلب عبر الواتساب">
@@ -629,7 +653,7 @@ ${addonsText}${totalText}
         </div>
       </main>
 
-      {/* Booking Details Modal (نموذج الحجز المصغر والمدمج) */}
+      {/* Booking Details Modal */}
       {selectedPackageForBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-md overflow-y-auto custom-scrollbar">
           <div className="relative bg-white/95 backdrop-blur-2xl border border-white rounded-[1.5rem] w-full max-w-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
@@ -638,7 +662,6 @@ ${addonsText}${totalText}
               <X className="w-5 h-5" />
             </button>
 
-            {/* الجانب الأيمن: تفاصيل الباقة */}
             <div className="md:w-5/12 bg-rose-50/50 p-4 md:p-5 pt-10 flex flex-col border-b md:border-b-0 md:border-l border-rose-100">
               <div className="mb-4">
                 <h3 className="text-2xl font-black text-stone-900 mb-1 leading-tight">{selectedPackageForBooking.name}</h3>
@@ -695,9 +718,7 @@ ${addonsText}${totalText}
               )}
             </div>
 
-            {/* الجانب الأيسر: نموذج الحجز المصغر */}
             <div className="md:w-7/12 p-4 md:p-5 pt-10 relative bg-white">
-              
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-stone-900 flex items-center gap-1.5">
                   <CalendarDays className="w-5 h-5 text-rose-500" /> استكمال الحجز
@@ -705,42 +726,39 @@ ${addonsText}${totalText}
               </div>
 
               <form onSubmit={(e) => handleBookingSubmit(e, selectedPackageForBooking.name)} className="space-y-2.5">
-                
                 {activeTab === 'video' || activeTab === 'photoOnly' ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><User className="w-3 h-3"/> اسم العميل</label>
-                        <input required name="customerName" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" />
+                        <input required name="customerName" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3"/> تاريخ المناسبة</label>
                         <input required type="date" name="date" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Building2 className="w-3 h-3"/> المكان أو القاعة <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                      <input name="location" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" />
+                      <input name="location" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><MapPin className="w-3 h-3"/> مكان السيشن <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                        <select name="photoLocation" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all cursor-pointer">
+                        <select name="photoLocation" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 transition-all cursor-pointer">
                           <option value="لم يتم التحديد بعد">-- اختر المكان --</option>
-                          <option value="أمازون (1700 جنيه)">أمازون (1700 جنيه)</option>
-                          <option value="جرين آيلاند (1500 جنيه)">جرين آيلاند (1500 ج)</option>
-                          <option value="ويف (1500 جنيه)">ويف (1500 جنيه)</option>
-                          <option value="أطلانتس (1500 جنيه)">أطلانتس (1500 جنيه)</option>
-                          <option value="فايبس (1500 جنيه)">فايبس (1500 جنيه)</option>
-                          <option value="ريفر (1500 جنيه)">ريفر (1500 جنيه)</option>
-                          <option value="مكان آخر (غير محدد)">مكان آخر</option>
+                          <option value="أمازون (1700 جنيه)">أمازون</option>
+                          <option value="جرين آيلاند">جرين آيلاند</option>
+                          <option value="ويف">ويف</option>
+                          <option value="أطلانتس">أطلانتس</option>
+                          <option value="فايبس">فايبس</option>
+                          <option value="ريفر">ريفر</option>
+                          <option value="مكان آخر">مكان آخر</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Phone className="w-3 h-3"/> رقم الهاتف (واتس آب) <span className="text-rose-500">*</span></label>
-                        <input required type="tel" name="phone" placeholder="01xxxxxxxxx" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" dir="ltr" />
+                        <input required type="tel" name="phone" placeholder="01xxxxxxxxx" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" dir="ltr" />
                       </div>
                     </div>
                   </>
@@ -749,44 +767,41 @@ ${addonsText}${totalText}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><User className="w-3 h-3"/> العريس</label>
-                        <input required name="groom" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
+                        <input required name="groom" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><User className="w-3 h-3"/> العروسة</label>
-                        <input required name="bride" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
+                        <input required name="bride" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3"/> تاريخ المناسبة</label>
-                        <input required type="date" name="date" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
+                        <input required type="date" name="date" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Sparkles className="w-3 h-3"/> ميك أب ارتيست <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                        <input name="makeup" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" />
+                        <input name="makeup" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Building2 className="w-3 h-3"/> القاعة / الفندق <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                        <input name="hall" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" />
+                        <input name="hall" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Map className="w-3 h-3"/> العنوان <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                        <input name="address" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" />
+                        <input name="address" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><Phone className="w-3 h-3"/> رقم الهاتف (واتس آب) <span className="text-rose-500">*</span></label>
-                        <input required type="tel" name="phone" placeholder="01xxxxxxxxx" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all placeholder:text-stone-300" dir="ltr" />
+                        <input required type="tel" name="phone" placeholder="01xxxxxxxxx" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400" dir="ltr" />
                       </div>
                       <div>
                         <label className="block text-stone-600 text-[10px] font-bold mb-1 flex items-center gap-1"><MapPin className="w-3 h-3"/> السيشن <span className="font-normal text-[9px] text-stone-400">(اختياري)</span></label>
-                        <select name="photoLocation" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all cursor-pointer">
+                        <select name="photoLocation" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-rose-400 transition-all cursor-pointer">
                           <option value="لم يحدد">-- اختر --</option>
                           <option value="أمازون">أمازون</option>
                           <option value="جرين آيلاند">جرين آيلاند</option>
@@ -819,7 +834,6 @@ ${addonsText}${totalText}
                       </div>
                     </label>
                   </div>
-
                   {paymentMethod === 'vodafone' && (
                     <div className="mt-2 p-3 bg-red-50/80 rounded-xl border border-red-100 flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-300">
                       <div>
@@ -831,7 +845,6 @@ ${addonsText}${totalText}
                       </a>
                     </div>
                   )}
-
                   {paymentMethod === 'instapay' && (
                     <div className="mt-2 p-3 bg-purple-50/80 rounded-xl border border-purple-100 flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-300">
                       <div>
@@ -870,7 +883,6 @@ ${addonsText}${totalText}
                 </div>
               </form>
             </div>
-
           </div>
         </div>
       )}
@@ -885,11 +897,8 @@ ${addonsText}${totalText}
               </h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-stone-400 hover:text-stone-600 bg-white p-2 rounded-full shadow-sm"><X className="w-4 h-4" /></button>
             </div>
-            
             <form onSubmit={handleSaveEdit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
-              
               <input type="hidden" name="type" value={editingItem?.id === 'notes' ? 'notes' : (editingItem?.id === 'promo' ? 'promo' : 'item')} />
-
               {editingItem?.id === 'notes' ? (
                 <div>
                   <label className="block text-stone-700 font-bold text-sm mb-2">الملاحظات (اكتب كل ملاحظة في سطر)</label>
@@ -899,15 +908,15 @@ ${addonsText}${totalText}
                 <>
                   <div className="flex items-center gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
                     <input type="checkbox" id="isActive" name="isActive" defaultChecked={editingItem?.isActive} className="w-5 h-5 accent-rose-500 rounded" />
-                    <label htmlFor="isActive" className="text-stone-700 font-bold text-sm cursor-pointer select-none">تفعيل الإعلان (ظهوره للعملاء)</label>
+                    <label htmlFor="isActive" className="text-stone-700 font-bold text-sm cursor-pointer select-none">تفعيل الإعلان</label>
                   </div>
                   <div>
                     <label className="block text-stone-700 font-bold text-sm mb-2">عنوان الإعلان</label>
-                    <input required defaultValue={editingItem?.title} name="title" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                    <input required defaultValue={editingItem?.title} name="title" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                   </div>
                   <div>
                     <label className="block text-stone-700 font-bold text-sm mb-2">وصف العرض</label>
-                    <textarea required rows={3} defaultValue={editingItem?.desc} name="desc" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                    <textarea required rows={3} defaultValue={editingItem?.desc} name="desc" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -915,33 +924,43 @@ ${addonsText}${totalText}
                       <input required defaultValue={editingItem?.price} name="price" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                     </div>
                     <div>
-                      <label className="block text-stone-700 font-bold text-sm mb-2">السعر القديم (قبل الخصم)</label>
+                      <label className="block text-stone-700 font-bold text-sm mb-2">السعر القديم</label>
                       <input required defaultValue={editingItem?.oldPrice} name="oldPrice" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-stone-700 font-bold text-sm mb-2">رابط الزر المخصص (مثل رابط واتساب مباشر)</label>
+                    <label className="block text-stone-700 font-bold text-sm mb-2">رابط الزر</label>
                     <input required defaultValue={editingItem?.link} name="link" dir="ltr" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 text-left focus:outline-none focus:border-rose-400" />
                   </div>
                   <div>
-                    <label className="block text-stone-700 font-bold text-sm mb-2">صورة الغلاف للإعلان</label>
+                    <label className="block text-stone-700 font-bold text-sm mb-2">صور الغلاف</label>
                     <div className="flex flex-col gap-3">
-                      {promoImage && <img src={promoImage} alt="Preview" className="w-full h-32 object-cover rounded-xl border border-stone-200 shadow-sm" />}
+                      {formImages.length > 0 && (
+                        <div className="flex flex-wrap gap-3 mb-1">
+                          {formImages.map((img, idx) => (
+                            <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-stone-200 group">
+                              <img src={img} alt="img" className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => setFormImages(prev => prev.filter((_, i) => i !== idx))} className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex flex-col sm:flex-row gap-2">
                         <label className="bg-rose-100 text-rose-600 px-4 py-3 rounded-xl cursor-pointer hover:bg-rose-200 transition-colors text-sm font-bold flex items-center justify-center shrink-0 gap-2">
-                          <Upload className="w-4 h-4" /> رفع صورة
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                              const file = e.target.files[0];
-                              if(file) {
+                          <Upload className="w-4 h-4" /> رفع صور
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
+                              const files = Array.from(e.target.files);
+                              files.forEach(file => {
                                   const reader = new FileReader();
-                                  reader.onloadend = () => setPromoImage(reader.result);
+                                  reader.onloadend = () => setFormImages(prev => [...prev, reader.result]);
                                   reader.readAsDataURL(file);
-                              }
+                              });
+                              e.target.value = null;
                           }} />
                         </label>
                         <div className="flex flex-1 gap-1">
-                          <input type="text" value={tempImageUrl} onChange={(e) => setTempImageUrl(e.target.value)} placeholder="أو أضف رابط صورة..." className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-400" dir="ltr" />
-                          <button type="button" onClick={() => { if(tempImageUrl) { setPromoImage(tempImageUrl); setTempImageUrl(''); } }} className="bg-stone-200 text-stone-700 px-4 rounded-xl hover:bg-stone-300 transition-colors font-bold text-sm flex items-center justify-center">إضافة</button>
+                          <input type="text" value={tempImageUrl} onChange={(e) => setTempImageUrl(e.target.value)} placeholder="رابط صورة..." className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-400" dir="ltr" />
+                          <button type="button" onClick={() => { if(tempImageUrl) { setFormImages(prev => [...prev, tempImageUrl]); setTempImageUrl(''); } }} className="bg-stone-200 text-stone-700 px-4 rounded-xl font-bold text-sm">إضافة</button>
                         </div>
                       </div>
                     </div>
@@ -951,33 +970,27 @@ ${addonsText}${totalText}
                 <>
                   <div>
                     <label className="block text-stone-700 font-bold text-sm mb-2">اسم الباقة / العنصر</label>
-                    <input required defaultValue={editingItem?.name} name="name" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                    <input required defaultValue={editingItem?.name} name="name" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                   </div>
-                  
                   <div>
                     <label className="block text-stone-700 font-bold text-sm mb-2">السعر</label>
-                    <input required defaultValue={editingItem?.price} name="price" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                    <input required defaultValue={editingItem?.price} name="price" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                   </div>
-
                   {activeTab !== 'photoOnly' && activeTab !== 'tableaus' && activeTab !== 'gifts' && (
                     <div>
                       <label className="block text-stone-700 font-bold text-sm mb-2">صور الباقة</label>
-                      
                       {formImages.length > 0 && (
                         <div className="flex flex-wrap gap-3 mb-3">
                           {formImages.map((img, idx) => (
-                            <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-stone-200 shadow-sm group">
+                            <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-stone-200 group">
                               <img src={img} alt="img" className="w-full h-full object-cover" />
-                              <button type="button" onClick={() => setFormImages(prev => prev.filter((_, i) => i !== idx))} className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              <button type="button" onClick={() => setFormImages(prev => prev.filter((_, i) => i !== idx))} className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           ))}
                         </div>
                       )}
-                      
                       <div className="flex flex-col md:flex-row gap-2">
-                        <label className="bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl cursor-pointer hover:bg-rose-200 transition-colors text-xs font-bold flex items-center justify-center gap-2 shrink-0">
+                        <label className="bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl cursor-pointer hover:bg-rose-200 text-xs font-bold flex items-center justify-center gap-2 shrink-0">
                           <Upload className="w-4 h-4" /> رفع صور
                           <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
                             const files = Array.from(e.target.files);
@@ -991,43 +1004,41 @@ ${addonsText}${totalText}
                         </label>
                         <div className="flex flex-1 gap-1">
                           <input type="text" value={tempImageUrl} onChange={(e) => setTempImageUrl(e.target.value)} placeholder="رابط صورة..." className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-400" dir="ltr" />
-                          <button type="button" onClick={() => { if(tempImageUrl) { setFormImages(prev => [...prev, tempImageUrl]); setTempImageUrl(''); } }} className="bg-stone-200 text-stone-700 px-3 rounded-xl hover:bg-stone-300 transition-colors font-bold text-xs flex items-center justify-center">إضافة</button>
+                          <button type="button" onClick={() => { if(tempImageUrl) { setFormImages(prev => [...prev, tempImageUrl]); setTempImageUrl(''); } }} className="bg-stone-200 text-stone-700 px-3 rounded-xl font-bold text-xs">إضافة</button>
                         </div>
                       </div>
                     </div>
                   )}
-
                   {(activeTab === 'photography' || activeTab === 'video') ? (
                     <>
                       <div>
-                        <label className="block text-stone-700 font-bold text-sm mb-2">المميزات (ميزة في كل سطر)</label>
-                        <textarea required rows={5} defaultValue={editingItem?.features?.join('\n')} name="features" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                        <label className="block text-stone-700 font-bold text-sm mb-2">المميزات</label>
+                        <textarea required rows={5} defaultValue={editingItem?.features?.join('\n')} name="features" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                       <div className="flex items-center gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
                         <input type="checkbox" id="isPopular" name="isPopular" defaultChecked={editingItem?.isPopular} className="w-5 h-5 accent-amber-500 rounded" />
-                        <label htmlFor="isPopular" className="text-stone-700 font-bold text-sm cursor-pointer select-none">تمييز كـ "الأكثر طلباً"</label>
+                        <label htmlFor="isPopular" className="text-stone-700 font-bold text-sm">تمييز كـ "الأكثر طلباً"</label>
                       </div>
                     </>
                   ) : (
                     <>
                       <div>
                         <label className="block text-stone-700 font-bold text-sm mb-2">الوصف</label>
-                        <input required defaultValue={editingItem?.desc} name="desc" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400" />
+                        <input required defaultValue={editingItem?.desc} name="desc" className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:border-rose-400" />
                       </div>
                       {activeTab === 'photoOnly' && (
                         <div className="flex items-center gap-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
                           <input type="checkbox" id="isMini" name="isMini" defaultChecked={editingItem?.isMini} className="w-5 h-5 accent-indigo-500 rounded" />
-                          <label htmlFor="isMini" className="text-stone-700 font-bold text-sm cursor-pointer select-none">عرض كباقة مصغرة (في سلة الإضافات)</label>
+                          <label htmlFor="isMini" className="text-stone-700 font-bold text-sm">عرض كباقة مصغرة</label>
                         </div>
                       )}
                     </>
                   )}
                 </>
               )}
-
               <div className="pt-4 flex gap-3">
                 <button type="submit" className="flex-1 bg-stone-900 hover:bg-stone-800 text-white py-3 rounded-xl font-bold transition-colors shadow-lg">حفظ البيانات</button>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold transition-colors">إلغاء</button>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold">إلغاء</button>
               </div>
             </form>
           </div>
@@ -1036,7 +1047,6 @@ ${addonsText}${totalText}
 
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Tajawal:wght@400;500;700;800;900&display=swap');
-        
         .font-tajawal { font-family: 'Tajawal', sans-serif; }
         .font-signature { font-family: 'Great Vibes', cursive; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -1045,7 +1055,6 @@ ${addonsText}${totalText}
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #f43f5e; }
-
         @keyframes camera-flash {
           0%, 85% { opacity: 0; transform: scale(0.5); box-shadow: none; }
           88% { opacity: 1; transform: scale(2.5); box-shadow: 0 0 20px 10px rgba(255,255,255,0.9); }
@@ -1053,9 +1062,7 @@ ${addonsText}${totalText}
           92% { opacity: 1; transform: scale(2.5); box-shadow: 0 0 20px 10px rgba(255,255,255,0.9); }
           95%, 100% { opacity: 0; transform: scale(0.5); box-shadow: none; }
         }
-        .animate-camera-flash {
-          animation: camera-flash 4s ease-in-out infinite;
-        }
+        .animate-camera-flash { animation: camera-flash 4s ease-in-out infinite; }
       `}} />
     </div>
   );
