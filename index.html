@@ -57,13 +57,14 @@
         // ============================================================================
         // 🔴 إعدادات قاعدة بيانات فايربيس (Firebase Config) 🔴
         // ============================================================================
-        const myFirebaseConfig = {
-            apiKey: "ضع_مفتاح_API_هنا",
-            authDomain: "project-id.firebaseapp.com",
-            projectId: "project-id",
-            storageBucket: "project-id.appspot.com",
-            messagingSenderId: "sender-id",
-            appId: "app-id"
+        const firebaseConfig = {
+          apiKey: "AIzaSyCI0L2fO4_bdltYF7Hddjcxa6seSDbrMwc",
+          authDomain: "studio-noot.firebaseapp.com",
+          databaseURL: "https://studio-noot-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "studio-noot",
+          storageBucket: "studio-noot.firebasestorage.app",
+          messagingSenderId: "376391287753",
+          appId: "1:376391287753:web:58219ac850bde7e2a79e18"
         };
 
         window.state = {
@@ -82,10 +83,11 @@
 
         const initFirebase = async () => {
             let config = null;
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            // استخدام الإعدادات الخاصة بك مباشرة
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                config = firebaseConfig;
+            } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                 config = JSON.parse(__firebase_config);
-            } else if (myFirebaseConfig.apiKey !== "ضع_مفتاح_API_هنا") {
-                config = myFirebaseConfig;
             }
 
             if (config) {
