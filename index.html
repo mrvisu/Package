@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mrakby - Photography Studio</title>
     
-    <!-- Favicon (أيقونة التبويب) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -51,15 +49,11 @@
 
     <div id="app-root"></div>
 
-    <!-- Firebase & Logic Setup -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, getDocs, updateDoc, addDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ============================================================================
-        // 🔴 إعدادات قاعدة بيانات فايربيس (Firebase Config) 🔴
-        // ============================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyCI0L2fO4_bdltYF7Hddjcxa6seSDbrMwc",
           authDomain: "studio-noot.firebaseapp.com",
@@ -81,7 +75,7 @@
             db: null,
             auth: null,
             appId: typeof __app_id !== 'undefined' ? __app_id : 'mrakby-studio-app',
-            notes: "تأكيد الحجز وتثبيت الموعد يتطلب دفع مبلغ عربون مقدماً.\nرسوم تذكرة دخول مكان التصوير (الأرضية) غير شاملة في الباقة وتكون على نفقة العميل."
+            notes: "مقدم الحجز ( 1000 جنيه )\nالتصوير غير شامل تكلفة أرضية التصوير.\nفي حالة التصوير خارج المنصورة يتم إضافة ( 500 جنيه )."
         };
 
         const initFirebase = async () => {
@@ -111,7 +105,16 @@
 
         function setupDBListeners() {
             if (!state.db || !state.auth.currentUser) return renderApp();
-            const menuRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'studio_menu', 'latest');
+            // استخدام v2026 لتجنب التداخل مع البيانات القديمة
+            const menuRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'studio_menu', 'v2026');
+            
+            // تهيئة قاعدة البيانات بالبيانات الجديدة إذا كانت فارغة
+            getDoc(menuRef).then((docSnap) => {
+                if (!docSnap.exists()) {
+                    setDoc(menuRef, { menuData: state.menuData, notes: state.notes });
+                }
+            });
+
             onSnapshot(menuRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -173,13 +176,13 @@
                                 <h1 class="text-3xl md:text-4xl font-signature text-stone-900 leading-none pt-2 flex items-center justify-center gap-2">
                                     Mahmoud Elmrakby
                                 </h1>
-                                <p class="text-[9px] md:text-[10px] text-stone-500 uppercase tracking-[0.3em] font-bold -mt-1 text-center">Photography Studio</p>
+                                <p class="text-[9px] md:text-[10px] text-stone-500 uppercase tracking-[0.3em] font-bold -mt-1 text-center">Packages 2026</p>
                             </div>
                         </div>
                     </div>
                     <div class="pb-3 flex justify-center w-full overflow-hidden">
                         <nav class="flex items-center gap-1 bg-white/40 border border-white/50 shadow-sm p-1.5 rounded-2xl w-full md:w-max overflow-x-auto hide-scrollbar">
-                            ${['photography:camera:باقات الزفاف', 'photoOnly:focus:Photography Only', 'video:video:الفيديو والسينما', 'tableaus:image:التابلوهات', 'gifts:gift:الهدايا'].map(t => {
+                            ${['photography:camera:باقات الزفاف', 'photoOnly:focus:تصوير فقط', 'video:video:الفيديو والسينما', 'tableaus:image:التابلوهات', 'gifts:gift:الهدايا'].map(t => {
                                 const [id, icon, text] = t.split(':');
                                 const activeCls = `tab-active-${id}`;
                                 const isActive = state.activeTab === id;
@@ -318,7 +321,7 @@
                                     <span class="text-sm sm:text-base md:text-xl lg:text-2xl font-black ${th.text} leading-none">${item.price}</span>
                                     <span class="text-stone-400 text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs mb-0.5 font-bold">ج.م</span>
                                 </div>
-                                <button onclick="window.open('https://wa.me/201201260040?text='+encodeURIComponent('مرحباً، أريد طلب: ${item.name}'), '_blank')" class="${th.btn} p-1.5 md:p-2 lg:p-2.5 rounded-lg shadow-sm transition-all hover:-translate-y-0.5 w-full sm:w-auto flex justify-center mt-1 sm:mt-0">
+                                <button onclick="window.open('https://wa.me/201097576073?text='+encodeURIComponent('مرحباً، أريد طلب: ${item.name}'), '_blank')" class="${th.btn} p-1.5 md:p-2 lg:p-2.5 rounded-lg shadow-sm transition-all hover:-translate-y-0.5 w-full sm:w-auto flex justify-center mt-1 sm:mt-0">
                                     <i data-lucide="message-circle" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
                                 </button>
                             </div>
@@ -364,7 +367,6 @@
             const total = (priceNum + addonsSum).toLocaleString();
 
             const c = document.getElementById('modals-container');
-            // استرجاع تصميم الجانبين العريض (max-w-4xl) ليظهر الاسم والتفاصيل على اليمين والنموذج على اليسار
             c.innerHTML = `
             <div id="booking-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-md overflow-y-auto custom-scrollbar">
                 <div class="relative bg-white/95 backdrop-blur-2xl border border-white rounded-[2rem] w-full max-w-4xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
@@ -467,14 +469,12 @@
                 bookingData.makeup = fd.get('makeup') || 'لم يحدد';
             }
 
-            // Save to DB
             await saveBookingToDB(bookingData);
 
-            // WhatsApp Message
             const portalLink = `${window.location.origin}${window.location.pathname}?portal=${receipt}`;
             const msg = `مرحباً، أريد تأكيد الحجز:\n\nرقم الإيصال: *${receipt}*\nالباقة: *${bookingData.packageName}*\nالتاريخ: ${bookingData.date}\nهاتف: ${bookingData.phone}\n${state.selectedAddons.length ? `الإضافات: ${state.selectedAddons.map(a=>a.name).join(' + ')}\n` : ''}\nيمكنك متابعة حجزي من الرابط التالي:\n${portalLink}`;
             
-            window.open(`https://wa.me/201201260040?text=${encodeURIComponent(msg)}`, '_blank');
+            window.open(`https://wa.me/201097576073?text=${encodeURIComponent(msg)}`, '_blank');
             closeModals();
             state.selectedAddons = [];
             renderApp();
@@ -551,34 +551,47 @@
             }
         };
 
+        // دالة توفير البيانات المبدئية لعام 2026
         function getInitialData() {
             return {
                 promos: {
-                    photography: { isActive: true, title: "🔥 باقة الأفراح الشاملة 🔥", desc: "خصم حصري على الباقة המاسية بمناسبة الموسم.", price: "12,000", oldPrice: "15,000", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop", "https://images.unsplash.com/photo-1606800052052-a08af7148866?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201201260040", categoryName: 'الزفاف' },
-                    photoOnly: { isActive: true, title: "سيشن تصوير كابلز", desc: "احجز سيشن الخطوبة الآن واطبع صورك مجاناً!", price: "3,500", oldPrice: "4,500", images: ["https://images.unsplash.com/photo-1583939000140-6218d6e38cce?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201201260040", categoryName: 'التصوير' },
-                    video: { isActive: true, title: "السينما 4K", desc: "فيلمك بأعلى جودة سينمائية وطيران درون مجاني.", price: "9,000", oldPrice: "11,000", images: ["https://images.unsplash.com/photo-1589087394126-9a2fc487e22f?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201201260040", categoryName: 'الفيديو' },
+                    photography: { isActive: true, title: "🔥 باقة الأفراح الشاملة 🔥", desc: "خصم حصري على الباقة VIP بمناسبة الموسم.", price: "7,000", oldPrice: "9,000", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop", "https://images.unsplash.com/photo-1606800052052-a08af7148866?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201097576073", categoryName: 'الزفاف' },
+                    photoOnly: { isActive: true, title: "باقات الجلسات الخاصة", desc: "سیشن زفاف، خطوبة، حنة، كتب كتاب مع طباعة فاخرة!", price: "3,000", oldPrice: "4,000", images: ["https://images.unsplash.com/photo-1583939000140-6218d6e38cce?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201097576073", categoryName: 'التصوير' },
+                    video: { isActive: true, title: "وحدة ميكسر HD كاملة", desc: "تغطية كاملة بأعلى جودة سينمائية.", price: "6,000", oldPrice: "8,000", images: ["https://images.unsplash.com/photo-1589087394126-9a2fc487e22f?q=80&w=1200&auto=format&fit=crop"], link: "https://wa.me/201097576073", categoryName: 'الفيديو' },
                     tableaus: { isActive: false }, gifts: { isActive: false }
                 },
                 photography: [
-                    { id: 1, name: "الباقة الفضية", price: "5,000", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"], features: ["تصوير قاعة الفرح", "50 صورة معدلة"] },
-                    { id: 2, name: "الباقة الذهبية", price: "8,500", isPopular:true, images: ["https://images.unsplash.com/photo-1583939000140-6218d6e38cce?q=80&w=800&auto=format&fit=crop"], features: ["سيشن + قاعة", "100 صورة", "ألبوم ديجيتال 30x40"] }
+                    { id: 1, name: "الباقة 1", price: "4,000", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"], features: ["سيشن زفاف، تصوير القاعة", "45x30 اليوم مقاس", "50x40 طباعة تابلوه", "20x30 طباعة 1 ستاند", "طباعة كروت هدية"] },
+                    { id: 2, name: "الباقة 2", price: "4,500", images: ["https://images.unsplash.com/photo-1583939000140-6218d6e38cce?q=80&w=800&auto=format&fit=crop"], features: ["سيشن زفاف، تصوير كاجوال", "45x30 اليوم مقاس", "50x40 طباعة تابلوه", "20x30 طباعة 2 ستاند", "طباعة كروت هدية"] },
+                    { id: 3, name: "الباقة 3", price: "6,000", isPopular:true, images: ["https://images.unsplash.com/photo-1542042161784-26ab9e041e89?q=80&w=800&auto=format&fit=crop"], features: ["سيشن زفاف، سيشن كاجوال، تصوير القاعة", "45x30 اليوم مقاس", "50x70 طباعة تابلوه", "20x30 طباعة 2 ستاند", "طباعة كروت هدية"] },
+                    { id: 4, name: "باقة VIP", price: "7,000", images: ["https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=800&auto=format&fit=crop"], features: ["سيشن زفاف، سيشن كاجوال، تصوير القاعة", "60x40 اليوم مقاس", "50x70 طباعة 2 تابلوه", "20x30 طباعة 2 ستاند", "طباعة 40 كارت هدية"] }
                 ],
                 photoOnly: [
-                    { id: 10, name: "سيشن خارجي", price: "2,500", desc: "ساعتين تصوير", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=200&auto=format&fit=crop"] },
-                    { id: 14, name: "تعديل صور إضافية", price: "500", desc: "تعديل 20 صورة", isMini: true }
+                    { id: 10, name: "باقة الجلسات (3000)", price: "3,000", desc: "سيشن زفاف (خطوبة) حنة (كتب كتاب). طباعة 30x45 + كروت هدية + تابلوه 40x50 + 20x30.", images: ["https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=200&auto=format&fit=crop"] },
+                    { id: 11, name: "باقة الجلسات (3500)", price: "3,500", desc: "سيشن زفاف (خطوبة) حنة (كتب كتاب). طباعة 30x80 + كروت هدية + تابلوه 70x50 + 20x30.", images: ["https://images.unsplash.com/photo-1542042161784-26ab9e041e89?q=80&w=200&auto=format&fit=crop"] },
+                    { id: 12, name: "سيشن زفاف أو كاجوال", price: "2,000", desc: "بدون طباعة", isMini: true },
+                    { id: 13, name: "سيشن خطوبة أو كتب كتاب", price: "1,500", desc: "بدون طباعة", isMini: true },
+                    { id: 14, name: "تصوير فوتوغرافي", price: "1,000", desc: "بدون طباعة", isMini: true },
+                    { id: 15, name: "كاميرا إضافية فوتوغرافي", price: "1,000", desc: "بدون طباعة", isMini: true },
+                    { id: 16, name: "فوتو عيد ميلاد أو سبوع", price: "800", desc: "بدون طباعة", isMini: true },
+                    { id: 17, name: "تصوير في الاستوديو حنة", price: "800", desc: "بدون طباعة", isMini: true }
                 ],
-                video: [ { id: 5, name: "تصوير سينمائي", price: "9,000", images: ["https://images.unsplash.com/photo-1589087394126-9a2fc487e22f?q=80&w=800&auto=format&fit=crop"], features: ["2 كاميرا 4K", "مونتاج كامل"] } ],
+                video: [ 
+                    { id: 20, name: "كاميرا فيديو حنة HD", price: "1,000", images: ["https://images.unsplash.com/photo-1601506521937-0121a7fc2a6b?q=80&w=800&auto=format&fit=crop"], features: ["كاميرا HD", "تسليم على فلاشة"] },
+                    { id: 21, name: "وحدة ميكسر فيديو HD كاملة", price: "3,500", images: ["https://images.unsplash.com/photo-1589087394126-9a2fc487e22f?q=80&w=800&auto=format&fit=crop"], features: ["وحدة ميكسر كاملة HD"] },
+                    { id: 22, name: "وحدة ميكسر فيديو يوم كامل", price: "6,000", images: ["https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=800&auto=format&fit=crop"], features: ["وحدة ميكسر", "يوم كامل"] }
+                ],
                 tableaus: [ 
-                    { id: 6, name: "تابلوه خشب", price: "600", desc: "مقاس 50x70 سم", images: ["https://images.unsplash.com/photo-1544457070-4cd773b4d71e?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 7, name: "تابلوه كانفاس", price: "950", desc: "طباعة فاخرة", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 15, name: "تابلوه عرض 3 قطع", desc: "تصميم عصري", price: "1,200", images: ["https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 17, name: "برواز اكريلك", desc: "شفاف وعصري", price: "850", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] }
+                    { id: 30, name: "تابلوه خشب", price: "600", desc: "مقاس 50x70 سم", images: ["https://images.unsplash.com/photo-1544457070-4cd773b4d71e?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 31, name: "تابلوه كانفاس", price: "950", desc: "طباعة فاخرة", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 32, name: "تابلوه عرض 3 قطع", desc: "تصميم عصري", price: "1,200", images: ["https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 33, name: "برواز اكريلك", desc: "شفاف وعصري", price: "850", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] }
                 ],
                 gifts: [ 
-                    { id: 8, name: "كتاب زوار", price: "400", desc: "خشب محفور", images: ["https://images.unsplash.com/photo-1517457210165-27a3c333a5da?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 9, name: "تصوير فوري", price: "1,500", desc: "50 صورة للضيوف", images: ["https://images.unsplash.com/photo-1526304760382-3591d3840148?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 16, name: "بوكس صور خشبي", desc: "صندوق أنيق للصور", price: "750", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
-                    { id: 18, name: "مج حراري", desc: "طباعة صورتك", price: "250", images: ["https://images.unsplash.com/photo-1517457210165-27a3c333a5da?q=80&w=800&auto=format&fit=crop"] }
+                    { id: 40, name: "كتاب زوار", price: "400", desc: "خشب محفور", images: ["https://images.unsplash.com/photo-1517457210165-27a3c333a5da?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 41, name: "تصوير فوري", price: "1,500", desc: "50 صورة للضيوف", images: ["https://images.unsplash.com/photo-1526304760382-3591d3840148?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 42, name: "بوكس صور خشبي", desc: "صندوق أنيق للصور", price: "750", images: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop"] },
+                    { id: 43, name: "مج حراري", desc: "طباعة صورتك", price: "250", images: ["https://images.unsplash.com/photo-1517457210165-27a3c333a5da?q=80&w=800&auto=format&fit=crop"] }
                 ]
             };
         }
